@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import madpy
 
 # Open the LHE file
-doc=ET.parse(gzip.open('Zjj.lhe.gz'))
+doc=ET.parse(gzip.open('data/Zjj.lhe.gz'))
 df=pd.DataFrame({'raw':[e.text for e in doc.iter('event')]})
 
 # Parse the event entries
@@ -18,5 +18,7 @@ df['stable']=df.particles.apply(madpy.filter_stable) # list of sable particles
 df['minv']=df.stable.apply(lambda ps: sum(ps,madpy.Particle()).M) # invariant mass of all stable particles
 
 # Plot!
-plt.hist(df.minv,bins=40,range=(0,200),weights=df.xsec)
+plt.hist(df.minv,bins=40,range=(0,200),weights=df.xsec/sum(df.index))
+plt.xlabel('Dijet Invariant Mass [GeV]')
+plt.ylabel('$\sigma$ [pb / 5 GeV]')
 plt.show()
