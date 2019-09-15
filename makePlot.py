@@ -4,61 +4,19 @@ import gzip
 import pandas as pd
 import matplotlib.pyplot as plt
 import xml.etree.ElementTree as ET
-from math import *
+import madpy
 
-class Particle:
-    def __init__(self,pdg=None,status=None,px=0,py=0,pz=0,E=0):
-        self.pdg=pdg
-        self.status=status
-        
-        self.px=px
-        self.py=py
-        self.pz=pz
-        self.E =E
-
-    @property
-    def M(self):
-        return sqrt(self.E**2-self.px**2-self.py**2-self.pz**2)
-
-    @property
-    def stable(self):
-        return self.status==1
-
-    def __add__(self,other):
-        spart=Particle()
-        spart.px=self.px+other.px
-        spart.py=self.py+other.py
-        spart.pz=self.pz+other.pz
-        spart.E =self.E +other.E
-
-        return spart
-
-def parse_mg_raw(raw):
-    xsec=None
-    particles=[]
-    
-    lines=raw.split('\n')
-    for line in lines:
-        line=line.strip()
-        if line=='': continue
-
-        if xsec==None: #first line
-            xsec=float(line.split()[2])
-        else: # particle
-            parts=line.split()
-            p=Particle(int(parts[0]),int(parts[1]),float(parts[6]),float(parts[7]),float(parts[8]),float(parts[9]))
-            particles.append(p)
-
-    return pd.Series({'xsec':xsec,'particles':particles})
-
-def filter_stable(particles):
-    return filter(lambda p: p.stable,particles)
-
-doc=ET.parse(gzip.open('/home/kkrizka/Sources/MG5_aMC_v2_6_6/PROC_zjj/Events/run_01/unweighted_events.lhe.gz'))
+# Open the LHE file
+doc=ET.parse(gzip.open('Zjj.lhe.gz'))
 df=pd.DataFrame({'raw':[e.text for e in doc.iter('event')]})
-df=df.raw.apply(parse_mg_raw)
-df['stable']=df.particles.apply(filter_stable)
-df['minv']=df.stable.apply(lambda ps: sum(ps,Particle()).M)
 
+# Parse the event entries
+df=df.raw.apply(madpy.parse_mg_raw)
+
+# Calculate a few useful variables
+df['stable']=df.particles.apply(madpy.filter_stable) # list of sable particles
+df['minv']=df.stable.apply(lambda ps: sum(ps,madpy.Particle()).M) # invariant mass of all stable particles
+
+# Plot!
 plt.hist(df.minv,bins=40,range=(0,200),weights=df.xsec)
 plt.show()
