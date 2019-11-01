@@ -17,6 +17,10 @@ class Particle:
         return sqrt(self.E**2-self.px**2-self.py**2-self.pz**2)
 
     @property
+    def pT(self):
+        return sqrt(self.px**2+self.py**2)
+
+    @property
     def stable(self):
         return self.status==1
 
@@ -48,4 +52,4 @@ def parse_mg_raw(raw):
     return pd.Series({'xsec':xsec,'particles':particles})
 
 def filter_stable(particles):
-    return filter(lambda p: p.stable,particles)
+    return list(filter(lambda p: p.stable,particles))
