@@ -16,23 +16,39 @@ def load_lhe_pattern(pattern):
 
 
 class Particle:
-    def __init__(self,pdg=None,status=None,px=0,py=0,pz=0,E=0):
+    def __init__(self,pdg=None,status=None,px=0,py=0,pz=0,M=0):
         self.pdg=pdg
         self.status=status
-        
+
         self.px=px
         self.py=py
         self.pz=pz
-        self.E =E
+        self.M =M
 
     @property
-    def M(self):
-        return sqrt(self.E**2-self.px**2-self.py**2-self.pz**2)
+    def E(self):
+        return sqrt(self.M**2+self.px**2+self.py**2+self.pz**2)
 
     @property
     def pT(self):
         return sqrt(self.px**2+self.py**2)
 
+    @property
+    def eta(self):
+        p=sqrt(self.px**2+self.py**2+self.pz**2)
+        cosTheta=self.pz/p if p!=0 else 1.0
+        if cosTheta*cosTheta < 1.:
+            return -0.5* log( (1.0-cosTheta)/(1.0+cosTheta) )
+        if self.pz == 0:
+            return 0
+        if self.pz > 0:
+            return 10e10;
+        return -10e10;
+    
+    @property
+    def phi(self):
+        return atan2(self.py,self.px)
+    
     @property
     def stable(self):
         return self.status==1
@@ -61,7 +77,7 @@ def parse_mg_raw(raw):
             xsec=float(line.split()[2])
         else: # particle
             parts=line.split()
-            p=Particle(int(parts[0]),int(parts[1]),float(parts[6]),float(parts[7]),float(parts[8]),float(parts[9]))
+            p=Particle(int(parts[0]),int(parts[1]),float(parts[6]),float(parts[7]),float(parts[8]),float(parts[10]))
             particles.append(p)
 
     #
