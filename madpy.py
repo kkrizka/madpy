@@ -1,13 +1,14 @@
 from math import *
 import xml.etree.ElementTree as ET
 import glob
+import gzip
 
 import pandas as pd
 
 def load_lhe_pattern(pattern):
     dfs=[]
-    for path in glob.glob(pattern)[0:10]:
-        doc=ET.parse(path)
+    for path in glob.glob(pattern):
+        doc=ET.parse(gzip.open(path) if path.endswith('gz') else path)
         df=pd.DataFrame({'raw':[e for e in doc.iter('event')]})
         df=df.raw.apply(parse_mg_raw)
         dfs.append(df)
